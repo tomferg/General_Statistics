@@ -16,7 +16,7 @@ install.packages("ez")
 install.packages("tidyverse")
 
 library("ggplot2") #
-library("lme4") # for linear modeling - check this
+library("lme4") # for linear modeling
 library("checkmate") #
 library("lmerTest") #
 library("dplyr") #useful for summarizing data and re-organizing data, just use tidyverse
@@ -134,6 +134,33 @@ leveneTest(Y ~ group, data = data_frame) #this lets you test the homogeniety of 
 
 
 ##### Model building - IN PROGRESS #####
+#Regression Analysis
+
+#### Linear Mixed Models - IN PROGRESS #####
+#need lme4 package for this
+#for model building we always compare some model with more parameters to a null model with less parameters
+#linear mixed models are nice because they contain both fixed and random effects
+#fixed effect is an effect from a variable that is consistent across people such as weight or height
+#random is our idiosyntratic version of an effect, so it could be location or person (if we have multiple measurements)
+
+model.null = lmer(DV ~ IV_1 + #our IV_1 is our fixed effect
+                         (1|subject) + (1|location), data=datasetname, #subject and location are our random effects
+                       REML=FALSE)
+summary(model.null)
+model.full = lmer(DV ~ IV_1 + IV_2 + IV_3 + #here we have added more fixed effects, as it is a more complex model
+                          (1|subject) + (1|location), #subject and location are our random effects
+                        data=datasetname, REML=FALSE)
+summary(model.full) #gives us the summary of 
+
+anova(model.null,model.full) #this will compute our test for the models
+coef(model.full)
+
+#Useful links
+#http://www.bodowinter.com./tutorial/bw_LME_tutorial1.pdf
+#http://www.bodowinter.com./tutorial/bw_LME_tutorial2.pdf
+#https://web.stanford.edu/class/psych252/section/Mixed_models_tutorial.html
+
+
 ##### Correlations #####
 #Note that both these are from the "stats" package
 cor(x,y, na.rm = TRUE) #can be done on a matrix though, where cor will compute all the correlations between columns
