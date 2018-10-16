@@ -96,7 +96,8 @@ mean() #gives the mean
 median() #gives the median
 sd() #gives the standard deviation
 
-##### T-tests - These are welch's t-test (the more conservative t-test) #####
+##### T-tests #####
+# These are welch's t-test (the more conservative t-test)
 t.test(y,mu=0) #One sample t-test, testing against 0, y is the dataframe
 t.test(X, Y, paired = FALSE, alternative = "one.sided") #Independent Samples T-Test, replace X and Y
 t.test(X, Y, paired = FALSE, alternative = "two.sided")
@@ -136,7 +137,7 @@ leveneTest(Y ~ group, data = data_frame) #this lets you test the homogeniety of 
 ##### Model building - IN PROGRESS #####
 #Regression Analysis
 
-#### Linear Mixed Models - IN PROGRESS #####
+##### Linear Mixed Models - IN PROGRESS #####
 #need lme4 package for this
 #for model building we always compare some model with more parameters to a null model with less parameters
 #linear mixed models are nice because they contain both fixed and random effects
@@ -185,10 +186,18 @@ summary() # gives summary statistics of either the function (e.g., anova) or the
 
 ##### Tidyverse -IN PROGRESS #####
 #Dplyr examples - 
+#this uses the gapmidner dataset (which can be installed via a package)
 gapminder %>% arrange(desc(gdpPercap)) #descding just allows you to put in descending order
 gapminder %>% filter(year == 2007) %>% arrange(desc(gdpPercap))#Can put the two verbs together! 
 gapminder %>% mutate(pop = pop/1000000) #creates the new population value that is more readable
 gapminder %>% summarize(meanLifeExp = mean(lifeExp)) #gives you the mean of the life expectency
+#Other examples - More General
+Data_Set_name = data %>% summarize(average = mean(value)*1000) 
+#goes from dataset, creates a column called average using the summarize function
+Data_Set_name = data %>% group_by(gender) %>% summarize(average = mean(RT)) 
+#does the same thing, but groups it by gender first (and no *1000 multiplication)
+Data_Set_name = data %>% mutate(average_ms = average*1000)
+#takes the data and creates a new column called average_ms, which is just average times 1000 (created above)
 
 
 ##### Loops and Functions - In progress #####
