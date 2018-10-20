@@ -22,8 +22,8 @@ library("lmerTest") #
 library("dplyr") #useful for summarizing data and re-organizing data, just use tidyverse
 library("moments") #
 library("psych") #
-library(car)
-library(ez)
+library("car")
+library("ez")
 library("tidyverse")
 
 
@@ -51,7 +51,8 @@ datasetname = read.csv("/Users/samplename/samplefolder/datasetname.csv", header 
 
 #read.csv is just a specified form of read table
 read.table()
-read.table("http://lib.stat.cmu.edu/jcgs/tu",skip=4,header=T) #import from web, note that you have to skip the first 4 lines
+read.table("http://users.stat.ufl.edu/~winner/data/lsd.dat",header=F) #file with no header
+read.table("http://lib.stat.cmu.edu/jcgs/tu",skip=4,header=T) #import from web, note that you have to skip the first 4 lines, and the header
 read.table(file.choose(new=F),header=T) #useful way to use read table to choose data instead of playing around
 
 
@@ -68,6 +69,7 @@ subset() #allows for the seperation of data from a dataset
 droplevels()
 summary() #very key! use for after tests and ANOVa and things of that nature
 describe #need psych package!, used to describe the data set (means, n,sd, median and the like)
+my_data$newcol = oldcol*6 #this is how you add a new column, in this case just a simple linear transformation of an old column
 
 #Creating Matrix - for graphing purposes 
 A = matrix(c(name_1,m1,sd1,cf_1,name_2,m2,sd2, cf_2),nrow=2,ncol=4,byrow = TRUE)
@@ -82,10 +84,10 @@ colnames(datasetname) = c("avgdist","accuracy", "gender") #way to add names, mak
 rownames(datasetnam) = c("p_1","p_2","p_3") #p_1 could mean participant 1
 
 #Commands for viewing the structure of the data 
-str(mod2) #gives you the structure of the dataframe (e.g., this many factors with this many levels)
-head(mod2) # gives you the first 6 subjects?
-names(mod2) #gives you the names of the header (if they are included)
-View(mod2)
+str(my_data) #gives you the structure of the dataframe (e.g., this many factors with this many levels)
+head(my_data) # gives you the first 6 subjects?
+names(my_data) #gives you the names of the header (if they are included)
+View(my_data)
 
 ################ Data analysis Section ###########################
 #A lot of this section is in progress, and I hope to update it as I finish off the statistics
@@ -95,6 +97,18 @@ View(mod2)
 mean() #gives the mean
 median() #gives the median
 sd() #gives the standard deviation
+var() #gives the variance
+
+##### Correlations #####
+cor() #will return all the correlations of your dataset
+#it gets returned in a table
+cor(my_data$variable1,my_data$variable2) #returns the correlation between two variables
+#Pearson is the default method
+cor(my_data$variable1,my_data$variable2, method = "pearson") #pearson, when you have cts X and Y
+cor(my_data$variable1,my_data$variable2, method = "spearman") #spearman's rho, when you have non-para data, ordinal data
+cor(my_data$variable1,my_data$variable2, method = "kendall")
+#We can also use the cor.test fucntion from the "stats" package to test our significance
+cor.test(x,y, alterative = c ("two-sided"), method = "pearson")
 
 ##### T-tests #####
 # These are welch's t-test (the more conservative t-test)
@@ -105,11 +119,11 @@ t.test(X, Y, paired = TRUE, alternative = "one.sided") #Paired T-test
 t.test(X, Y, paired = TRUE, alternative = "two.sided")
 
 ##### ANOVA - IN PROGRESS#####
-# ANOVA - not using CAR or EZANOVA #
+# ANOVA - Base R
 one_way <- aov(y ~ X, data=mydataframe) #does an anova of the data, one-way anova
 summary(one_way)
 anova(y ~ X, data=mydataframe) #simple way
-
+#MANOVA -Base R
 man <- manova(Y ~ A*B) #might need to use cbind
 summary(man, test="Pillai") #test
 
@@ -119,23 +133,31 @@ pairwise.t.test(data_frame$Y, data_frame$group, p.adjust.method = "BH") #can cha
 # p.adjust methods are : "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"
 
 #ANOVA - Ez anova package commands
-#Repeated measures ANOVA
-ez_anova_1 <- read.csv("/Users/username/folder/dataframename.csv", header = TRUE, sep = ",")#selects CSV file
-rm1_lat <- rm1 %>% select(P_Code,Gender,Strat,Strat_Num,L1,L2,L3,L4,L5,L6,L7,L8,L9,L10) #selects the data called L1
-rm1_long_lat <- gather(rm1_lat, trial, latency, L1:L10, factor_key=TRUE)#Data need to be in wide format so convert from long to wide
-anova_lat_overall <- ezANOVA(data=rm1_long_lat,dv=latency,wid=P_Code,within = .(trial),type=3,detailed = TRUE)
-print(anova_lat_overall) #prints the results of the anova
-
-#For computing the chi-square value?
+#EZANOVA is good because it outputs sphericity tests and effect size
+aov3 = ezANOVA(data = datasetname, dv = yourDV,wid=.(subject_id), between=.(iv3)) #one way between
+aov1 = ezANOVA(data = datasetname, dv = yourDV, wid=.(subject_id), within=.(iv1)) #one way within subject
+aov2 = ezANOVA(data = datasetname, dv = yourDV, wid=.(subject_id),within=.(iv1,iv2)) #two way within subject
+aov4 = ezANOVA(data = datasetname, dv = yourDV, wid=.(subject_id),within=.(iv1,iv2),between=.(iv3)) #two way within, one way between
+print(aov1) #output
+#Link for computing the chi-square value:
 #https://stats.stackexchange.com/questions/41399/how-to-calculate-chi-squared-from-mauchly-of-rs-ezanova-output
 
-#CAR package
-leveneTest(Y ~ group, data = data_frame) #this lets you test the homogeniety of variance, which is key...EZanova 
-#is easire to interpret though
+#CAR package - In progress...
+#CAR uses the modeling approach syntax
+leveneTest(Y ~ group, data = data_frame) #this lets you test the homogeniety of variance, which is key
+#...EZanova is easier to interpret
 
 
-##### Model building - IN PROGRESS #####
-#Regression Analysis
+##### Model building #####
+#Simple Linear Regression
+linear_model = lm(my_data$Y ~ my_data$X1 + my_data$X2)
+print(linear_model) #this gives us the intercept and the slope
+summary(linear_model) #this gives us our summary output
+
+# In progress
+#Non-linear regression
+#Logistic Regression
+#Poisson Regression
 
 ##### Linear Mixed Models - IN PROGRESS #####
 #need lme4 package for this
@@ -162,13 +184,10 @@ coef(model.full)
 #https://web.stanford.edu/class/psych252/section/Mixed_models_tutorial.html
 
 
-##### Correlations #####
-#Note that both these are from the "stats" package
-cor(x,y, na.rm = TRUE) #can be done on a matrix though, where cor will compute all the correlations between columns
-cor.test(x,y, alterative = c ("two-sided"), method = "pearson") #this may need to be changed
-#methods are "pearson", "kendall", "spearman"
 
 ##### Bayes Factors - IN PROGRESS #####
+
+
 
 ##### Power Analysis #####
 #Note that these come from the "pwr" package
@@ -184,13 +203,13 @@ print() #simply prints the output of the function to the console, somes tests us
 summary() # gives summary statistics of either the function (e.g., anova) or the table itself
 #the types of statistics it gives depends on the input
 
-##### Tidyverse -IN PROGRESS #####
-#Dplyr examples - 
-#this uses the gapmidner dataset (which can be installed via a package)
+##### Tidyverse #####
+#this uses the gapmidner dataset (which can be installed via "gapminder" package)
 gapminder %>% arrange(desc(gdpPercap)) #descding just allows you to put in descending order
 gapminder %>% filter(year == 2007) %>% arrange(desc(gdpPercap))#Can put the two verbs together! 
 gapminder %>% mutate(pop = pop/1000000) #creates the new population value that is more readable
 gapminder %>% summarize(meanLifeExp = mean(lifeExp)) #gives you the mean of the life expectency
+
 #Other examples - More General
 Data_Set_name = data %>% summarize(average = mean(value)*1000) 
 #goes from dataset, creates a column called average using the summarize function
@@ -200,9 +219,13 @@ Data_Set_name = data %>% mutate(average_ms = average*1000)
 #takes the data and creates a new column called average_ms, which is just average times 1000 (created above)
 
 
-##### Loops and Functions - In progress #####
+##### Loops and Functions #####
 #Functions
 myfunction <- function(arg1, arg2, ... ){
   statements
   return(object)
 }
+
+if{}
+
+for{}
